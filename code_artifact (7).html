@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>קמפיין גיוס - מטיסים את שניאור לרבי</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Assistant & Heebo -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- html2pdf.js for client-side PDF receipt generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Assistant', 'Heebo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#1d4ed8',
+                            600: '#1e40af',
+                            700: '#1d3557',
+                            800: '#0f223d',
+                        },
+                        gold: {
+                            400: '#facc15',
+                            500: '#eab308',
+                            600: '#ca8a04',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-banner {
+            background: linear-gradient(135deg, #0f223d 0%, #1d4ed8 100%);
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #posterModalContent, #posterModalContent *, #receiptContainerToPrint, #receiptContainerToPrint * {
+                visibility: visible;
+            }
+            #posterModalContent, #receiptContainerToPrint {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+        .certificate-border {
+            border: 8px double #ca8a04;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
+
+    <!-- Top Header / Bar -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center flex-shrink-0 justify-center text-white font-bold text-xl shadow">
+                    <i class="fa-solid fa-plane-departure text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-blue-300 block font-semibold tracking-wider">ועד הפעולה להטסת שניאור</span>
+                    <h1 class="text-base font-bold leading-tight">קמפיין בר המצווה $5,000</h1>
+                </div>
+            </div>
+            
+            <!-- Poster & Admin Lock Buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="openPosterModal()" class="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs md:text-sm px-3.5 py-2 rounded-xl transition font-bold shadow">
+                    <i class="fa-solid fa-print"></i>
+                    <span>פוסטר הקמפיין</span>
+                </button>
+                <button id="adminAuthBtn" onclick="openAdminAuthModal()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs md:text-sm px-3.5 py-2 rounded-xl transition border border-slate-700 font-medium">
+                    <i id="adminLockIcon" class="fa-solid fa-lock text-amber-400"></i>
+                    <span id="adminBtnText">כניסת מנהל</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Status Banner -->
+    <div id="adminModeBanner" class="hidden bg-amber-500 text-slate-900 px-4 py-2 text-center text-xs md:text-sm font-bold shadow-inner flex items-center justify-center gap-2 flex-wrap">
+        <i class="fa-solid fa-user-shield"></i>
+        <span>מצב מנהל מורשה פעיל: הנך צופה בפירוט ההתחייבויות והניהול המלא.</span>
+        <button onclick="openAdminLedgerModal()" class="bg-slate-900 text-white px-3 py-1 rounded-lg text-xs hover:bg-slate-800 transition mr-2 font-bold">
+            <i class="fa-solid fa-sliders"></i> פנל ניהול
+        </button>
+        <button onclick="logoutAdmin()" class="bg-rose-700 text-white px-2.5 py-1 rounded-lg text-xs hover:bg-rose-800 transition font-bold">יציאה</button>
+    </div>
+
+    <main class="flex-grow">
+        <!-- Hero & Slogans Section -->
+        <section class="gradient-banner text-white pt-10 pb-16 px-4 relative overflow-hidden">
+            <div class="max-w-4xl mx-auto text-center relative z-10">
+                <span class="inline-block bg-blue-500/30 text-blue-200 border border-blue-400/30 rounded-full px-4 py-1 text-sm font-semibold mb-4 backdrop-blur-sm">
+                    ✨ על דעת ההורים ובגיבוי מלא
+                </span>
+                
+                <h2 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4 tracking-tight">
+                    מגייסים יחד $5,000:<br class="hidden sm:inline"/> הילדים מטיסים את שניאור לרבי!
+                </h2>
+                
+                <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto font-light leading-relaxed mb-6">
+                    שומרים על הערכים, לא מתפשרים על אירוע חומרי מיותר. המשכת הפעילות ללא פשרות.
+                </p>
+
+                <!-- Center Banner Slogan -->
+                <div class="inline-flex items-center gap-3 bg-amber-400 text-slate-900 px-6 py-3 rounded-2xl font-black text-lg md:text-xl shadow-xl transform -rotate-1 border-2 border-amber-300 my-2">
+                    <i class="fa-solid fa-quote-right text-amber-700"></i>
+                    <span>"אירוע – זה לא באירוע! המשכת הפעילות ללא פשרות."</span>
+                    <i class="fa-solid fa-quote-left text-amber-700"></i>
+                </div>
+            </div>
+            
+            <!-- Background Decorative Planes -->
+            <div class="absolute -bottom-6 left-10 text-white/5 text-9xl pointer-events-none transform -rotate-12">
+                <i class="fa-solid fa-plane"></i>
+            </div>
+            <div class="absolute top-6 right-8 text-white/5 text-8xl pointer-events-none transform rotate-45">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+        </section>
+
+        <!-- Live Progress Section Card -->
+        <section class="max-w-4xl mx-auto px-4 -mt-10 relative z-20">
+            <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-100">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">מד התקדמות קמפיין חי</span>
+                        <div class="flex items-baseline gap-2">
+                            <span id="totalRaisedText" class="text-3xl md:text-4xl font-black text-slate-800">$0</span>
+                            <span class="text-slate-500 font-semibold text-lg">מתוך יעד <span class="text-blue-600">$5,000</span></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-200/80">
+                        <div class="text-center px-3 border-l border-slate-200">
+                            <span id="donorsCount" class="text-xl font-bold text-slate-800 block">0</span>
+                            <span class="text-xs text-slate-500 font-medium">מתחייבים</span>
+                        </div>
+                        <div class="text-center px-3">
+                            <span id="daysLeft" class="text-xl font-bold text-blue-600 block">12</span>
+                            <span class="text-xs text-slate-500 font-medium">ימים נותרו</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar Graphic -->
+                <div class="relative w-full bg-slate-100 h-6 rounded-full overflow-hidden p-1 border border-slate-200">
+                    <div id="mainProgressBar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-1000 ease-out flex items-center justify-end px-2" style="width: 0%">
+                        <span id="progressPercentBadge" class="text-[10px] font-black text-white leading-none">0%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Children Ambassadors Grid Section -->
+        <section class="max-w-4xl mx-auto px-4 py-12">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold text-slate-800">לוח שגרירים: הילדים המגייסים</h3>
+                <p class="text-slate-500 text-sm mt-1">כל ילד לוקח חלק פעיל בהטסת שניאור ומגייס את היעד האישי שלו</p>
+            </div>
+
+            <div id="ambassadorsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Ambassador cards rendered dynamically -->
+            </div>
+        </section>
+
+        <!-- Donation / Pledge Form Section -->
+        <section id="donateSection" class="max-w-4xl mx-auto px-4 py-8">
+            <div class="bg-gradient-to-b from-white to-slate-50 rounded-3xl shadow-xl p-6 md:p-10 border border-slate-200">
+                <div class="text-center mb-8">
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-2">
+                        טופס רישום והתחייבות רשמי
+                    </span>
+                    <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800">טופס התחייבות והשתתפות בקמפיין</h3>
+                    <p class="text-slate-500 text-sm mt-1">בחרו סכום ושייכו את ההתחייבות לילד המגייס שלכם</p>
+                </div>
+
+                <form id="donationForm" onsubmit="handleDonationSubmit(event)" class="space-y-6">
+                    <!-- Preset Amounts Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">בחר סכום התחייבות ($USD)</label>
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            <button type="button" onclick="selectAmount(18, this)" class="amount-btn border-2 border-slate-200 hover:border-blue-500 py-3 rounded-2xl font-bold text-slate-700 transition hover:bg-blue-50/50 text-center">
+                                $18
+                            </button>
+                            <button type="button" onclick="selectAmount(50, this)" class="amount-btn border-2 border-slate-200 hover:border-blue-500 py-3 rounded-2xl font-bold text-slate-700 transition hover:bg-blue-50/50 text-center">
+                                $50
+                            </button>
+                            <button type="button" onclick="selectAmount(100, this)" class="amount-btn active-amount border-2 border-blue-600 bg-blue-50 text-blue-700 py-3 rounded-2xl font-bold transition text-center shadow-sm">
+                                $100
+                            </button>
+                            <button type="button" onclick="selectAmount(250, this)" class="amount-btn border-2 border-slate-200 hover:border-blue-500 py-3 rounded-2xl font-bold text-slate-700 transition hover:bg-blue-50/50 text-center">
+                                $250
+                            </button>
+                            <button type="button" onclick="selectAmount(500, this)" class="amount-btn border-2 border-slate-200 hover:border-blue-500 py-3 rounded-2xl font-bold text-slate-700 transition hover:bg-blue-50/50 text-center">
+                                $500
+                            </button>
+                            <button type="button" onclick="enableCustomAmount(this)" class="amount-btn border-2 border-slate-200 hover:border-blue-500 py-3 rounded-2xl font-bold text-slate-700 transition hover:bg-blue-50/50 text-center text-xs">
+                                סכום אחר
+                            </button>
+                        </div>
+                        
+                        <!-- Custom Amount Input Field -->
+                        <div id="customAmountWrapper" class="hidden mt-3">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 font-bold">$</span>
+                                <input type="number" id="customAmountInput" min="1" placeholder="הכנס סכום מותאם אישית בדולרים" class="w-full pl-3 pr-8 py-2.5 border-2 border-blue-500 rounded-xl focus:outline-none font-bold text-slate-800">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ambassador Child Selection -->
+                    <div>
+                        <label for="ambassadorInput" class="block text-xs font-bold text-slate-700 uppercase mb-2">
+                            שם הילד המגייס (שיוך הזיכוי לשגריר) <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="ambassadorInput" required placeholder="הזן את שם הילד/השגריר המגייס..." class="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-blue-600 focus:outline-none bg-white text-slate-800 font-semibold">
+                    </div>
+
+                    <!-- Donor Details Fields -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="donorName" class="block text-xs font-bold text-slate-700 uppercase mb-1">שם מלא <span class="text-rose-500">*</span></label>
+                            <input type="text" id="donorName" required placeholder="לדוגמה: משה כהן" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="donorPhone" class="block text-xs font-bold text-slate-700 uppercase mb-1">מספר טלפון לקבלה והודעה <span class="text-rose-500">*</span></label>
+                            <input type="tel" id="donorPhone" required placeholder="050-0000000" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Toggle -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-2">סוג ההתחייבות</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <label class="cursor-pointer border-2 border-blue-600 bg-blue-50/60 p-3 rounded-2xl flex flex-col items-center justify-center text-center font-bold text-xs text-blue-900 gap-1 transition">
+                                <input type="radio" name="paymentType" value="התחייבות אישית" checked class="hidden" onchange="togglePaymentSelection(this)">
+                                <i class="fa-solid fa-file-signature text-lg text-blue-600"></i>
+                                <span>התחייבות אישית</span>
+                            </label>
+                            <label class="cursor-pointer border-2 border-slate-200 p-3 rounded-2xl flex flex-col items-center justify-center text-center font-bold text-xs text-slate-700 gap-1 hover:border-slate-300 transition">
+                                <input type="radio" name="paymentType" value="התחייבות בתשלומים" class="hidden" onchange="togglePaymentSelection(this)">
+                                <i class="fa-solid fa-calendar-check text-lg text-amber-600"></i>
+                                <span>התחייבות בתשלומים</span>
+                            </label>
+                            <label class="cursor-pointer border-2 border-slate-200 p-3 rounded-2xl flex flex-col items-center justify-center text-center font-bold text-xs text-slate-700 gap-1 hover:border-slate-300 transition">
+                                <input type="radio" name="paymentType" value="מזומן / צ'ק בהגעה" class="hidden" onchange="togglePaymentSelection(this)">
+                                <i class="fa-solid fa-hand-holding-dollar text-lg text-emerald-600"></i>
+                                <span>מזומן / צ'ק בהגעה</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Dedication Note (Optional) -->
+                    <div>
+                        <label for="donorNote" class="block text-xs font-bold text-slate-700 uppercase mb-1">ברכה או הקדשה (אופציונלי)</label>
+                        <input type="text" id="donorNote" placeholder="איחולים לבביים לשניאור לרגל הבר מצווה..." class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:outline-none">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full gold-gradient text-slate-900 hover:brightness-105 font-black text-lg py-4 rounded-2xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-heart text-rose-600"></i>
+                        <span>אשר התחייבות והשתתפות בקמפיין</span>
+                    </button>
+                    <p class="text-center text-xs text-slate-400">אישור התחייבות וקבלת שטר יישלחו אוטומטית למכשירך</p>
+                </form>
+            </div>
+        </section>
+
+        <!-- Facts vs Rumors Section -->
+        <section class="max-w-4xl mx-auto px-4 py-10">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800">טבלת שקיפות: עובדות מול שמועות</h3>
+                        <p class="text-xs text-slate-500">ניהול הכספים נעשה באחריות מוחלטת ובשקיפות מלאה מול ההורים והתורמים</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-right text-slate-700 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-800 text-xs uppercase font-extrabold border-b border-slate-200">
+                                <th class="p-3 rounded-r-xl">חברת תעופה / ספק</th>
+                                <th class="p-3">מחיר לכרטיס ($USD)</th>
+                                <th class="p-3">סטטוס ובדיקת איכות</th>
+                                <th class="p-3 rounded-l-xl">מסקנה ביצועית</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">חברת ארקיע (Arkia)</td>
+                                <td class="p-3 text-rose-600 font-bold">$1,250</td>
+                                <td class="p-3 text-xs text-slate-500">טיסה ישירה, מחיר יקר ללא הצדקה תקציבית לקמפיין</td>
+                                <td class="p-3"><span class="bg-rose-100 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">נפסל (יקר מדי)</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 bg-emerald-50/30">
+                                <td class="p-3 font-bold text-slate-900">חברת TAP Air Portugal</td>
+                                <td class="p-3 text-emerald-600 font-bold">$720</td>
+                                <td class="p-3 text-xs text-slate-500">מסלול מאושר, חיסכון משמעותי של $530 לכל נוסע!</td>
+                                <td class="p-3"><span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">אושר ונבחר ✔</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 font-bold text-slate-900">ביטוח בריאות ומנהלות</td>
+                                <td class="p-3 font-bold text-slate-700">כלול בתקציב</td>
+                                <td class="p-3 text-xs text-slate-500">כיסוי מלא לנסיעה תקנית, ללא הוצאות חומריות מיותרות</td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold">שקוף ומבוקר</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer Section -->
+        <footer class="bg-slate-900 text-slate-400 py-8 px-4 border-t border-slate-800 text-center text-xs">
+            <div class="max-w-4xl mx-auto space-y-3">
+                <p class="text-amber-400 font-bold text-sm">
+                    "ההורים החליטו, הוועד מבצע – השיירה של שניאור נוסעת אל הרבי! נלחמים בעצלות ובקמצנות, שומרים על התוכן."
+                </p>
+                <p>ועד הפעולה להטסת שניאור לרבי • קמפיין בר מצווה $5,000</p>
+                <p class="text-slate-600 text-[10px]">כתובת האתר: <a href="https://mushkivil-commits.github.io/Fundraising-for-the-Rebbe-s-flight/" target="_blank" class="text-blue-400 underline">https://mushkivil-commits.github.io/Fundraising-for-the-Rebbe-s-flight/</a></p>
+            </div>
+        </footer>
+
+        <!-- Poster Modal -->
+        <div id="posterModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+                <button onclick="closePosterModal()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">
+                    &times;
+                </button>
+
+                <div id="posterModalContent" class="text-center space-y-4 p-6 border-4 border-amber-400 rounded-2xl bg-gradient-to-b from-slate-900 to-blue-950 text-white">
+                    <span class="bg-amber-400 text-slate-900 font-black text-xs px-3 py-1 rounded-full inline-block uppercase">פוסטר קמפיין רשמי</span>
+                    <h2 class="text-2xl font-black text-amber-300">מטיסים את שניאור לרבי!</h2>
+                    <p class="text-sm text-blue-100">קמפיין גיוס בר המצווה $5,000</p>
+                    
+                    <div class="bg-white text-slate-900 p-4 rounded-xl shadow-inner font-black text-lg">
+                        "אירוע – זה לא באירוע! המשכת הפעילות ללא פשרות."
+                    </div>
+
+                    <!-- QR Code representation -->
+                    <div class="bg-white p-3 rounded-xl inline-block mx-auto border-2 border-amber-400">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://mushkivil-commits.github.io/Fundraising-for-the-Rebbe-s-flight/" alt="QR Code" class="w-36 h-36 mx-auto">
+                        <span class="text-[10px] text-slate-600 font-mono block mt-1">סרוק להשתתפות בקמפיין</span>
+                    </div>
+
+                    <div class="text-xs text-blue-200 font-mono break-all dir-ltr">
+                        https://mushkivil-commits.github.io/Fundraising-for-the-Rebbe-s-flight/
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button onclick="window.print()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-print"></i> הדפס פוסטר
+                    </button>
+                    <button onclick="copyLink('https://mushkivil-commits.github.io/Fundraising-for-the-Rebbe-s-flight/')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-copy"></i> העתק קישור
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Entry Code Modal (PIN Protected 4567) -->
+        <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative">
+                <button onclick="closeAdminAuthModal()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">
+                    &times;
+                </button>
+                
+                <div class="text-center mb-6">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-800">כניסת מנהל קמפיין</h3>
+                    <p class="text-xs text-slate-500 mt-1">הזן קוד גישה חסוי לצפייה בפירוט ההתחייבויות המלא</p>
+                </div>
+
+                <form onsubmit="verifyAdminPin(event)" class="space-y-4">
+                    <div>
+                        <label for="adminPinInput" class="block text-xs font-bold text-slate-700 uppercase mb-2 text-center">קוד גישה (PIN)</label>
+                        <input type="password" id="adminPinInput" maxlength="4" placeholder="••••" required class="w-full text-center text-3xl tracking-widest font-mono py-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:outline-none">
+                    </div>
+
+                    <div id="pinErrorMessage" class="hidden text-rose-600 text-xs text-center font-bold bg-rose-50 p-2 rounded-xl border border-rose-200">
+                        קוד שגוי! גישה נדחתה.
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl shadow transition">
+                        אמת קוד וכנס למערכת
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Detailed Ledger Modal -->
+        <div id="adminLedgerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-5xl w-full p-6 md:p-8 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col relative">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">פנל ניהול קמפיין מורחב</h3>
+                            <p class="text-xs text-slate-500">שליטה מלאה, שגרירים, דוחות וסנכרון מסד נתונים</p>
+                        </div>
+                    </div>
+                    <button onclick="closeAdminLedgerModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">
+                        &times;
+                    </button>
+                </div>
+
+                <!-- Admin Navigation Tabs -->
+                <div class="flex border-b border-slate-200 mb-4 gap-2 flex-wrap">
+                    <button onclick="switchAdminTab('donationsTab')" id="tabBtnDonations" class="px-4 py-2 text-xs font-bold border-b-2 border-amber-500 text-amber-600 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check"></i> יומן התחייבויות
+                    </button>
+                    <button onclick="switchAdminTab('ambassadorsTab')" id="tabBtnAmbassadors" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear"></i> ניהול שגרירים
+                    </button>
+                    <button onclick="switchAdminTab('addManualTab')" id="tabBtnAddManual" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> הוספת התחייבות ידנית
+                    </button>
+                </div>
+
+                <!-- Tab 1: Donations List -->
+                <div id="donationsTab" class="admin-tab-content flex-grow flex flex-col overflow-hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
+                        <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="חפש לפי שם תורם, טלפון או שגריר..." class="w-full sm:w-72 px-3.5 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:border-amber-500">
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="exportDonationsToCsv()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl border border-slate-300 flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                                <span>ייצא לאקסל/CSV</span>
+                            </button>
+                            <button onclick="promptResetAllData()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold px-3 py-2 rounded-xl border border-rose-200 flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>איפוס מנהל</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-y-auto flex-grow rounded-2xl border border-slate-200">
+                        <table class="w-full text-right text-xs text-slate-700">
+                            <thead class="bg-slate-100 text-slate-800 font-extrabold sticky top-0 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">תאריך</th>
+                                    <th class="p-3">שם התורם</th>
+                                    <th class="p-3">שגריר</th>
+                                    <th class="p-3">סכום ($)</th>
+                                    <th class="p-3">סוג התחייבות</th>
+                                    <th class="p-3">טלפון</th>
+                                    <th class="p-3">סטטוס</th>
+                                    <th class="p-3 text-center">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminDonationsTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Ambassador Management -->
+                <div id="ambassadorsTab" class="admin-tab-content hidden flex-grow flex flex-col overflow-y-auto space-y-4">
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">הוסף שגריר/ילד חדש למערכת</h4>
+                            <p class="text-xs text-slate-500">הגדר שגריר באופן יזום כולל יעד גיוס אישי בדולרים</p>
+                        </div>
+                        <button onclick="promptAddNewAmbassador()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2.5 rounded-xl text-xs shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>צור שגריר חדש</span>
+                        </button>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                        <table class="w-full text-right text-xs text-slate-700">
+                            <thead class="bg-slate-100 text-slate-800 font-extrabold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3">שם השגריר</th>
+                                    <th class="p-3">יעד אישי ($)</th>
+                                    <th class="p-3">גויס בפועל ($)</th>
+                                    <th class="p-3">אחוז התקדמות</th>
+                                    <th class="p-3 text-center">קישור אישי</th>
+                                    <th class="p-3 text-center">פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminAmbassadorsTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Manual Donation Form -->
+                <div id="addManualTab" class="admin-tab-content hidden flex-grow overflow-y-auto">
+                    <form onsubmit="handleManualDonationSubmit(event)" class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 max-w-xl mx-auto">
+                        <h4 class="font-bold text-slate-800 text-sm border-b pb-2 mb-3">הזנת התחייבות ידנית ע"י מנהל</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">שם התורם *</label>
+                                <input type="text" id="manualDonorName" required class="w-full px-3 py-2 border rounded-xl text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">טלפון לקבלה *</label>
+                                <input type="tel" id="manualDonorPhone" required class="w-full px-3 py-2 border rounded-xl text-xs">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">סכום בדולרים ($) *</label>
+                                <input type="number" id="manualAmount" min="1" required class="w-full px-3 py-2 border rounded-xl text-xs font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">שם השגריר / ילד *</label>
+                                <input type="text" id="manualAmbassador" required class="w-full px-3 py-2 border rounded-xl text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">סוג התחייבות</label>
+                            <select id="manualPaymentType" class="w-full px-3 py-2 border rounded-xl text-xs bg-white">
+                                <option value="התחייבות אישית">התחייבות אישית</option>
+                                <option value="התחייבות בתשלומים">התחייבות בתשלומים</option>
+                                <option value="מזומן / צ'ק בהגעה">מזומן / צ'ק בהגעה</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">הערה / הקדשה</label>
+                            <input type="text" id="manualNote" class="w-full px-3 py-2 border rounded-xl text-xs">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs transition shadow">
+                            שמור התחייבות במסד הנתונים
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success / Thank You Modal with PDF & Messaging -->
+        <div id="thankYouModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-xl w-full p-6 text-center shadow-2xl relative max-h-[92vh] overflow-y-auto">
+                <button onclick="closeThankYouModal()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-600 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">
+                    &times;
+                </button>
+
+                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800 mb-1">תודה רבה על השתתפותך!</h3>
+                <p class="text-xs text-slate-600 mb-4">ההתחייבות נקלטה בהצלחה ונשמרה במערכת הקמפיין.</p>
+
+                <!-- Printable/Exportable Official Pledge Document -->
+                <div id="receiptContainerToPrint" class="bg-amber-50/40 p-6 rounded-2xl border-2 border-amber-300 text-right text-xs space-y-3 relative my-2 certificate-border shadow-sm">
+                    <div class="text-center border-b border-amber-200 pb-3">
+                        <span class="text-[10px] bg-amber-200 text-amber-900 font-bold px-2.5 py-0.5 rounded-full uppercase">שטר התחייבות רשמי</span>
+                        <h4 class="text-lg font-black text-blue-950 mt-1">קמפיין טיסת הבר מצווה - מטיסים את שניאור לרבי</h4>
+                        <p class="text-[10px] text-slate-500">אישור השתתפות והתחייבות כספית</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-slate-700 pt-1">
+                        <div><span class="text-slate-400 block text-[10px]">מספר אישור:</span> <span id="modalReceiptId" class="font-bold font-mono text-slate-900">#84920</span></div>
+                        <div><span class="text-slate-400 block text-[10px]">תאריך:</span> <span id="modalReceiptDate" class="font-bold"></span></div>
+                        <div><span class="text-slate-400 block text-[10px]">שם התורם:</span> <span id="modalDonorName" class="font-bold text-slate-900 text-sm"></span></div>
+                        <div><span class="text-slate-400 block text-[10px]">טלפון:</span> <span id="modalDonorPhone" class="font-bold font-mono"></span></div>
+                        <div><span class="text-slate-400 block text-[10px]">שגריר מרוויח:</span> <span id="modalAmbassadorName" class="font-bold text-blue-700 text-sm"></span></div>
+                        <div><span class="text-slate-400 block text-[10px]">סוג התחייבות:</span> <span id="modalPaymentType" class="font-bold"></span></div>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-amber-200 mt-2">
+                        <span class="text-slate-800 font-bold">סכום ההתחייבות:</span>
+                        <span id="modalDonatedAmount" class="font-black text-emerald-600 text-xl"></span>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 text-center pt-2 border-t border-amber-200/60 flex justify-between items-center">
+                        <span>ועד הפעולה להטסת שניאור לרבי</span>
+                        <span>תזכו למצוות!</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Download PDF, WhatsApp, SMS, Email -->
+                <div class="space-y-2.5 mt-4">
+                    <button onclick="downloadReceiptPDF()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow">
+                        <i class="fa-solid fa-file-pdf text-rose-400 text-sm"></i>
+                        <span>הורד שטר התחייבות למכשיר (PDF)</span>
+                    </button>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <a id="btnSendWhatsapp" target="_blank" href="#" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>וואצאפ</span>
+                        </a>
+                        <a id="btnSendSms" href="#" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-comment-sms text-sm"></i>
+                            <span>סמס (SMS)</span>
+                        </a>
+                        <a id="btnSendEmail" href="#" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2.5 px-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-envelope text-sm"></i>
+                            <span>דוא"ל</span>
+                        </a>
+                    </div>
+                    
+                    <button onclick="copyReceiptText()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs transition border border-slate-200 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-copy text-slate-500"></i>
+                        <span>העתק נוסח הודעה מלא למכשיר</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Prompt Modal -->
+        <div id="customPromptModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+                <h3 id="customPromptTitle" class="text-lg font-bold text-slate-800"></h3>
+                <div id="customPromptInputs" class="space-y-3"></div>
+                <div class="flex gap-2 pt-2">
+                    <button id="customPromptConfirmBtn" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2.5 rounded-xl text-xs transition">אישור</button>
+                    <button onclick="closeCustomPromptModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">ביטול</button>
+                </div>
+            </div>
+        </div>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+            import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+            const TARGET_AMOUNT = 5000;
+            const ADMIN_PIN = "4567";
+            
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'shneor-flight-campaign-app';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                apiKey: "AIzaSyDemoDummyKeyForFallbackOnly",
+                authDomain: "demo-app.firebaseapp.com",
+                projectId: "demo-app",
+                storageBucket: "demo-app.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+
+            // Safe LocalStorage Wrapper to prevent crashes in iframe sandboxes
+            window.safeStorage = {
+                get: (key, fallback = []) => {
+                    try {
+                        const item = localStorage.getItem(key);
+                        return item ? JSON.parse(item) : fallback;
+                    } catch (e) {
+                        return fallback;
+                    }
+                },
+                set: (key, value) => {
+                    try {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    } catch (e) {
+                        console.warn("Storage write error", e);
+                    }
+                }
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            const donationsCol = collection(db, 'artifacts', appId, 'public', 'data', 'donations');
+            const ambassadorsCol = collection(db, 'artifacts', appId, 'public', 'data', 'ambassadors');
+
+            // Load initial state IMMEDIATELY from safeStorage
+            window.ambassadors = window.safeStorage.get('shneor_ambassadors_persistent', []);
+            window.donationsList = window.safeStorage.get('shneor_donations_persistent', []);
+            window.isAdminLoggedIn = false;
+            window.selectedDonationAmount = 100;
+            window.lastDonationData = null;
+
+            // Save helper
+            window.persistLocalState = function() {
+                window.safeStorage.set('shneor_ambassadors_persistent', window.ambassadors);
+                window.safeStorage.set('shneor_donations_persistent', window.donationsList);
+            };
+
+            // Initial UI render
+            window.addEventListener('DOMContentLoaded', () => {
+                window.recalculateAmbassadorTotals();
+                window.updateCampaignStats();
+                window.renderAmbassadors();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const ref = urlParams.get('ref');
+                if (ref) {
+                    const ambInput = document.getElementById('ambassadorInput');
+                    if (ambInput) ambInput.value = decodeURIComponent(ref);
+                }
+            });
+
+            async function startDatabase() {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (err) {
+                    console.log("Local storage fallback active");
+                }
+
+                // Firestore Sync for Ambassadors
+                onSnapshot(ambassadorsCol, (snapshot) => {
+                    if (snapshot && !snapshot.empty) {
+                        const cloudAmbassadors = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        cloudAmbassadors.forEach(ca => {
+                            if (!window.ambassadors.find(a => a.id === ca.id)) {
+                                window.ambassadors.push(ca);
+                            }
+                        });
+                        window.persistLocalState();
+                    }
+                    window.renderAmbassadors();
+                    window.updateCampaignStats();
+                    if (window.isAdminLoggedIn) window.renderAdminAmbassadorsTable();
+                }, (error) => {
+                    console.log("Firestore note: using resilient local storage");
+                });
+
+                // Firestore Sync for Donations
+                onSnapshot(donationsCol, (snapshot) => {
+                    if (snapshot && !snapshot.empty) {
+                        const cloudDonations = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        cloudDonations.forEach(cd => {
+                            if (!window.donationsList.find(d => d.id.toString() === cd.id.toString())) {
+                                window.donationsList.push(cd);
+                            }
+                        });
+                        window.donationsList.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        window.persistLocalState();
+                    }
+                    window.recalculateAmbassadorTotals();
+                    window.updateCampaignStats();
+                    window.renderAmbassadors();
+                    if (window.isAdminLoggedIn) window.renderAdminDonationsTable();
+                }, (error) => {
+                    console.log("Firestore note: using resilient local storage");
+                });
+            }
+
+            window.saveDonationToDb = async function(donationRecord) {
+                const idx = window.donationsList.findIndex(d => d.id.toString() === donationRecord.id.toString());
+                if (idx >= 0) {
+                    window.donationsList[idx] = donationRecord;
+                } else {
+                    window.donationsList.unshift(donationRecord);
+                }
+                window.persistLocalState();
+
+                try {
+                    const docRef = doc(donationsCol, donationRecord.id.toString());
+                    await setDoc(docRef, donationRecord);
+                } catch (err) {
+                    console.log("Saved locally successfully");
+                }
+
+                window.recalculateAmbassadorTotals();
+                window.updateCampaignStats();
+                window.renderAmbassadors();
+            };
+
+            window.deleteDonationFromDb = async function(donationId) {
+                window.donationsList = window.donationsList.filter(d => d.id.toString() !== donationId.toString());
+                window.persistLocalState();
+
+                try {
+                    await deleteDoc(doc(donationsCol, donationId.toString()));
+                } catch (err) {}
+
+                window.recalculateAmbassadorTotals();
+                window.updateCampaignStats();
+                window.renderAmbassadors();
+                if (window.isAdminLoggedIn) window.renderAdminDonationsTable();
+                window.showToast("ההתחייבות נמחקה בהצלחה");
+            };
+
+            window.togglePledgeStatus = async function(donationId) {
+                const don = window.donationsList.find(d => d.id.toString() === donationId.toString());
+                if (!don) return;
+                don.status = don.status === 'שולם' ? 'התחייבות' : 'שולם';
+                window.persistLocalState();
+                
+                try {
+                    const docRef = doc(donationsCol, donationId.toString());
+                    await setDoc(docRef, don);
+                } catch (err) {}
+
+                if (window.isAdminLoggedIn) window.renderAdminDonationsTable();
+                window.showToast(`סטטוס התחרט/עודכן ל-${don.status}`);
+            };
+
+            window.saveAmbassadorToDb = async function(ambassadorRecord) {
+                const existingIdx = window.ambassadors.findIndex(a => a.id === ambassadorRecord.id);
+                if (existingIdx >= 0) {
+                    window.ambassadors[existingIdx] = ambassadorRecord;
+                } else {
+                    window.ambassadors.push(ambassadorRecord);
+                }
+                window.persistLocalState();
+
+                try {
+                    const docRef = doc(ambassadorsCol, ambassadorRecord.id);
+                    await setDoc(docRef, ambassadorRecord);
+                } catch (err) {}
+
+                window.renderAmbassadors();
+            };
+
+            window.deleteAmbassadorFromDb = async function(ambassadorId) {
+                window.ambassadors = window.ambassadors.filter(a => a.id !== ambassadorId);
+                window.persistLocalState();
+
+                try {
+                    await deleteDoc(doc(ambassadorsCol, ambassadorId));
+                } catch (err) {}
+
+                window.renderAmbassadors();
+                if (window.isAdminLoggedIn) window.renderAdminAmbassadorsTable();
+                window.showToast("השגריר הוסר בהצלחה");
+            };
+
+            window.resetAllDataInDb = async function() {
+                window.donationsList = [];
+                window.ambassadors = [];
+                window.persistLocalState();
+                window.recalculateAmbassadorTotals();
+                window.updateCampaignStats();
+                window.renderAmbassadors();
+                if (window.isAdminLoggedIn) {
+                    window.renderAdminDonationsTable();
+                    window.renderAdminAmbassadorsTable();
+                }
+                window.showToast("כל הנתונים אופסו בהצלחה");
+            };
+
+            startDatabase();
+        </script>
+
+        <script>
+            // Toast Notification UI
+            window.showToast = function(msg, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = `p-3 rounded-2xl text-xs font-bold text-white shadow-xl flex items-center justify-between gap-3 pointer-events-auto transition-all transform duration-300 translate-y-2 ${type === 'error' ? 'bg-rose-600' : 'bg-slate-900 border border-slate-700'}`;
+                toast.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" class="text-white/70 hover:text-white">&times;</button>`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', '-translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3500);
+            };
+
+            window.recalculateAmbassadorTotals = function() {
+                if (!window.ambassadors) window.ambassadors = [];
+                window.ambassadors.forEach(amb => amb.raised = 0);
+                if (window.donationsList) {
+                    window.donationsList.forEach(don => {
+                        const amb = window.ambassadors.find(a => a.name.toLowerCase() === don.childName.toLowerCase());
+                        if (amb) {
+                            amb.raised += (parseInt(don.amount) || 0);
+                        }
+                    });
+                }
+            };
+
+            // Update stats on main campaign banner
+            window.updateCampaignStats = function() {
+                const list = window.donationsList || [];
+                const total = list.reduce((sum, d) => sum + (parseInt(d.amount) || 0), 0);
+                const count = list.length;
+                const percent = Math.min(Math.round((total / 5000) * 100), 100);
+
+                const totalText = document.getElementById('totalRaisedText');
+                if (totalText) totalText.innerText = `$${total.toLocaleString()}`;
+
+                const donorsCount = document.getElementById('donorsCount');
+                if (donorsCount) donorsCount.innerText = count.toString();
+
+                const progressBar = document.getElementById('mainProgressBar');
+                if (progressBar) progressBar.style.width = `${percent}%`;
+
+                const badge = document.getElementById('progressPercentBadge');
+                if (badge) badge.innerText = `${percent}%`;
+            };
+
+            window.renderAmbassadors = function() {
+                const container = document.getElementById('ambassadorsContainer');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                if (!window.ambassadors || window.ambassadors.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-10 bg-white rounded-3xl border border-dashed border-slate-300 p-6">
+                            <i class="fa-solid fa-users text-slate-300 text-4xl mb-3 block"></i>
+                            <h4 class="font-bold text-slate-600 text-base">טרם נוספו שגרירים מוגדרים</h4>
+                            <p class="text-xs text-slate-400 mt-1">ברגע שתבוצע התחייבות או שיוסף שגריר ע"י המנהל, הכרטיס יופיע כאן בלייב!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                window.ambassadors.forEach(amb => {
+                    const raised = amb.raised || 0;
+                    const target = amb.target || 1000;
+                    const percent = Math.min(Math.round((raised / target) * 100), 100);
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(amb.name)}`;
+                    const initial = amb.name.charAt(0);
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition";
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-lg flex items-center justify-center shadow">
+                                    ${initial}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-base">${amb.name}</h4>
+                                    <span class="text-xs text-slate-400 font-medium">שגריר גיוס אישי</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1 mb-3">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-slate-600">גויס: <span class="text-emerald-600 font-black">$${raised}</span></span>
+                                    <span class="text-slate-400">יעד: $${target}</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button onclick="selectAmbassadorForPledge('${amb.name}')" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs py-2 rounded-xl transition text-center">
+                                תרום דרך ${amb.name}
+                            </button>
+                            <button onclick="copyLink('${shareUrl}')" title="העתק קישור אישי" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs transition">
+                                <i class="fa-solid fa-share-nodes"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            };
+
+            function selectAmbassadorForPledge(name) {
+                const ambInput = document.getElementById('ambassadorInput');
+                if (ambInput) {
+                    ambInput.value = name;
+                    document.getElementById('donateSection').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            function togglePaymentSelection(radio) {
+                document.querySelectorAll('input[name="paymentType"]').forEach(r => {
+                    r.parentElement.classList.remove('border-blue-600', 'bg-blue-50/60', 'text-blue-900');
+                    r.parentElement.classList.add('border-slate-200', 'text-slate-700');
+                });
+                radio.parentElement.classList.add('border-blue-600', 'bg-blue-50/60', 'text-blue-900');
+                radio.parentElement.classList.remove('border-slate-200', 'text-slate-700');
+            }
+
+            function selectAmount(val, btn) {
+                window.selectedDonationAmount = val;
+                document.querySelectorAll('.amount-btn').forEach(b => {
+                    b.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700', 'active-amount');
+                    b.classList.add('border-slate-200', 'text-slate-700');
+                });
+                btn.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700', 'active-amount');
+                btn.classList.remove('border-slate-200', 'text-slate-700');
+
+                document.getElementById('customAmountWrapper').classList.add('hidden');
+            }
+
+            function enableCustomAmount(btn) {
+                window.selectedDonationAmount = 0;
+                document.querySelectorAll('.amount-btn').forEach(b => {
+                    b.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700', 'active-amount');
+                    b.classList.add('border-slate-200', 'text-slate-700');
+                });
+                btn.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700', 'active-amount');
+                btn.classList.remove('border-slate-200', 'text-slate-700');
+
+                const wrapper = document.getElementById('customAmountWrapper');
+                wrapper.classList.remove('hidden');
+                document.getElementById('customAmountInput').focus();
+            }
+
+            function openPosterModal() {
+                document.getElementById('posterModal').classList.remove('hidden');
+            }
+            function closePosterModal() {
+                document.getElementById('posterModal').classList.add('hidden');
+            }
+
+            function openAdminAuthModal() {
+                if (window.isAdminLoggedIn) {
+                    openAdminLedgerModal();
+                } else {
+                    document.getElementById('adminAuthModal').classList.remove('hidden');
+                }
+            }
+            function closeAdminAuthModal() {
+                document.getElementById('adminAuthModal').classList.add('hidden');
+                document.getElementById('pinErrorMessage').classList.add('hidden');
+            }
+
+            function verifyAdminPin(e) {
+                e.preventDefault();
+                const pin = document.getElementById('adminPinInput').value;
+                if (pin === '4567') {
+                    window.isAdminLoggedIn = true;
+                    closeAdminAuthModal();
+                    document.getElementById('adminModeBanner').classList.remove('hidden');
+                    document.getElementById('adminBtnText').innerText = "ניהול פעיל";
+                    document.getElementById('adminLockIcon').className = "fa-solid fa-lock-open text-emerald-400";
+                    openAdminLedgerModal();
+                    window.showToast("ברוך הבא! מצב מנהל הופעל");
+                } else {
+                    document.getElementById('pinErrorMessage').classList.remove('hidden');
+                }
+            }
+
+            function logoutAdmin() {
+                window.isAdminLoggedIn = false;
+                document.getElementById('adminModeBanner').classList.add('hidden');
+                document.getElementById('adminBtnText').innerText = "כניסת מנהל";
+                document.getElementById('adminLockIcon').className = "fa-solid fa-lock text-amber-400";
+                closeAdminLedgerModal();
+                window.showToast("יצאת ממצב מנהל");
+            }
+
+            function openAdminLedgerModal() {
+                if (!window.isAdminLoggedIn) return;
+                document.getElementById('adminLedgerModal').classList.remove('hidden');
+                renderAdminDonationsTable();
+            }
+            function closeAdminLedgerModal() {
+                document.getElementById('adminLedgerModal').classList.add('hidden');
+            }
+
+            function switchAdminTab(tabId) {
+                document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+
+                document.getElementById('tabBtnDonations').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabId === 'donationsTab' ? "border-amber-500 text-amber-600" : "border-transparent text-slate-500");
+                document.getElementById('tabBtnAmbassadors').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabId === 'ambassadorsTab' ? "border-amber-500 text-amber-600" : "border-transparent text-slate-500");
+                document.getElementById('tabBtnAddManual').className = "px-4 py-2 text-xs font-bold border-b-2 " + (tabId === 'addManualTab' ? "border-amber-500 text-amber-600" : "border-transparent text-slate-500");
+
+                if (tabId === 'ambassadorsTab') renderAdminAmbassadorsTable();
+                if (tabId === 'donationsTab') renderAdminDonationsTable();
+            }
+
+            function renderAdminDonationsTable(filteredList = null) {
+                const tbody = document.getElementById('adminDonationsTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const listToRender = filteredList || window.donationsList;
+
+                if (!listToRender || listToRender.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400">לא נמצאו התחייבויות להצגה</td></tr>`;
+                    return;
+                }
+
+                listToRender.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition";
+                    const isPaid = item.status === 'שולם';
+
+                    tr.innerHTML = `
+                        <td class="p-3 text-slate-400 font-mono text-[11px]">${item.date}</td>
+                        <td class="p-3 font-bold text-slate-900">${item.name}</td>
+                        <td class="p-3 text-blue-700 font-medium">${item.childName}</td>
+                        <td class="p-3 font-black text-emerald-600">$${item.amount}</td>
+                        <td class="p-3 text-slate-600">${item.payment}</td>
+                        <td class="p-3 font-mono dir-ltr text-right">${item.phone}</td>
+                        <td class="p-3">
+                            <button onclick="window.togglePledgeStatus('${item.id}')" class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                ${isPaid ? 'שולם ✔' : 'התחייבות ⏳'}
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="promptDeleteDonation('${item.id}')" class="text-rose-500 hover:text-rose-700 font-bold">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function renderAdminAmbassadorsTable() {
+                const tbody = document.getElementById('adminAmbassadorsTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                if (!window.ambassadors || window.ambassadors.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-400">טרם נרשמו שגרירים במערכת</td></tr>`;
+                    return;
+                }
+
+                window.ambassadors.forEach(amb => {
+                    const percent = Math.min(Math.round(((amb.raised || 0) / (amb.target || 1000)) * 100), 100);
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(amb.name)}`;
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50";
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-slate-900">${amb.name}</td>
+                        <td class="p-3 font-mono">$${amb.target || 1000}</td>
+                        <td class="p-3 font-mono text-emerald-600 font-bold">$${amb.raised || 0}</td>
+                        <td class="p-3 font-bold text-blue-600">${percent}%</td>
+                        <td class="p-3 text-center">
+                            <button onclick="copyLink('${shareUrl}')" class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[10px] font-bold">
+                                העתק קישור
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="promptDeleteAmbassador('${amb.id}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function promptAddNewAmbassador() {
+                openCustomPrompt("הוספת שגריר חדש", [
+                    { id: 'pName', label: 'שם השגריר', type: 'text', required: true },
+                    { id: 'pTarget', label: 'יעד אישי ($)', type: 'number', value: '1000' }
+                ], (data) => {
+                    if (!data.pName || !data.pName.trim()) return;
+                    const newAmb = {
+                        id: 'amb_' + Date.now(),
+                        name: data.pName.trim(),
+                        target: parseInt(data.pTarget) || 1000,
+                        raised: 0
+                    };
+                    window.saveAmbassadorToDb(newAmb);
+                    window.showToast("שגריר חדש נוסף בהצלחה");
+                });
+            }
+
+            function promptDeleteDonation(id) {
+                openCustomPrompt("מחיקת התחייבות", [
+                    { id: 'pInfo', label: 'האם למחוק התחייבות זו לצמיתות?', type: 'info' }
+                ], () => {
+                    window.deleteDonationFromDb(id);
+                });
+            }
+
+            function promptDeleteAmbassador(id) {
+                openCustomPrompt("מחיקת שגריר", [
+                    { id: 'pInfo', label: 'האם למחוק שגריר זה לצמיתות?', type: 'info' }
+                ], () => {
+                    window.deleteAmbassadorFromDb(id);
+                });
+            }
+
+            function promptResetAllData() {
+                openCustomPrompt("איפוס מוחלט של כל הנתונים", [
+                    { id: 'pInfo', label: 'אזהרה: פעולה זו תמחק את כל ההתחייבויות והשגרירים מהמערכת!', type: 'info' }
+                ], () => {
+                    window.resetAllDataInDb();
+                });
+            }
+
+            function openCustomPrompt(title, fields, onConfirm) {
+                document.getElementById('customPromptTitle').innerText = title;
+                const container = document.getElementById('customPromptInputs');
+                container.innerHTML = '';
+
+                fields.forEach(f => {
+                    if (f.type === 'info') {
+                        const p = document.createElement('p');
+                        p.className = 'text-xs text-rose-600 font-bold bg-rose-50 p-2.5 rounded-xl border border-rose-200';
+                        p.innerText = f.label;
+                        container.appendChild(p);
+                    } else {
+                        const div = document.createElement('div');
+                        div.innerHTML = `<label class="block text-xs font-bold text-slate-700 mb-1">${f.label}</label>
+                            <input id="${f.id}" type="${f.type}" value="${f.value || ''}" class="w-full px-3 py-2 border rounded-xl text-xs">`;
+                        container.appendChild(div);
+                    }
+                });
+
+                document.getElementById('customPromptModal').classList.remove('hidden');
+                document.getElementById('customPromptConfirmBtn').onclick = () => {
+                    const res = {};
+                    fields.forEach(f => {
+                        if (f.type !== 'info') {
+                            res[f.id] = document.getElementById(f.id).value;
+                        }
+                    });
+                    closeCustomPromptModal();
+                    onConfirm(res);
+                };
+            }
+
+            function closeCustomPromptModal() {
+                document.getElementById('customPromptModal').classList.add('hidden');
+            }
+
+            async function handleManualDonationSubmit(e) {
+                e.preventDefault();
+                const name = document.getElementById('manualDonorName').value.trim();
+                const phone = document.getElementById('manualDonorPhone').value.trim();
+                const amount = parseInt(document.getElementById('manualAmount').value) || 0;
+                const ambassadorName = document.getElementById('manualAmbassador').value.trim();
+                const payment = document.getElementById('manualPaymentType').value;
+                const note = document.getElementById('manualNote').value.trim();
+
+                if (!name || !ambassadorName || amount <= 0) return;
+
+                let amb = window.ambassadors.find(a => a.name.toLowerCase() === ambassadorName.toLowerCase());
+                if (!amb) {
+                    amb = {
+                        id: 'amb_' + Date.now(),
+                        name: ambassadorName,
+                        target: 1000,
+                        raised: 0
+                    };
+                    await window.saveAmbassadorToDb(amb);
+                }
+
+                const manualRecord = {
+                    id: Math.floor(10000 + Math.random() * 90000),
+                    date: new Date().toISOString().split('T')[0],
+                    name: name,
+                    childId: amb.id,
+                    childName: amb.name,
+                    amount: amount,
+                    payment: payment,
+                    phone: phone,
+                    note: note || "הוזן ידנית ע\"י מנהל",
+                    status: 'התחייבות'
+                };
+
+                await window.saveDonationToDb(manualRecord);
+                window.showToast("ההתחייבות נשמרה בהצלחה במערכת!");
+                e.target.reset();
+                switchAdminTab('donationsTab');
+            }
+
+            function filterAdminTable() {
+                const q = document.getElementById('adminSearchInput').value.toLowerCase();
+                const filtered = window.donationsList.filter(d => 
+                    d.name.toLowerCase().includes(q) || 
+                    d.childName.toLowerCase().includes(q) || 
+                    d.phone.includes(q)
+                );
+                renderAdminDonationsTable(filtered);
+            }
+
+            async function handleDonationSubmit(e) {
+                e.preventDefault();
+
+                const childNameInput = document.getElementById('ambassadorInput').value.trim();
+                if (!childNameInput) {
+                    window.showToast("אנא הזן את שם הילד המגייס", 'error');
+                    return;
+                }
+
+                let childObj = window.ambassadors.find(a => a.name.toLowerCase() === childNameInput.toLowerCase());
+                if (!childObj) {
+                    childObj = {
+                        id: 'amb_' + Date.now(),
+                        name: childNameInput,
+                        target: 1000,
+                        raised: 0
+                    };
+                    await window.saveAmbassadorToDb(childObj);
+                }
+
+                const donorName = document.getElementById('donorName').value.trim();
+                const donorPhone = document.getElementById('donorPhone').value.trim();
+                const donorNote = document.getElementById('donorNote').value.trim();
+                const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+
+                let amountToDonate = window.selectedDonationAmount;
+                if (!document.getElementById('customAmountWrapper').classList.contains('hidden')) {
+                    amountToDonate = parseInt(document.getElementById('customAmountInput').value) || 0;
+                }
+
+                if (!amountToDonate || amountToDonate <= 0) {
+                    window.showToast("אנא הזן סכום תקין", 'error');
+                    return;
+                }
+
+                const newDonation = {
+                    id: Math.floor(10000 + Math.random() * 90000),
+                    date: new Date().toISOString().split('T')[0],
+                    name: donorName,
+                    childId: childObj.id,
+                    childName: childObj.name,
+                    amount: amountToDonate,
+                    payment: paymentType,
+                    phone: donorPhone,
+                    note: donorNote,
+                    status: 'התחייבות'
+                };
+
+                await window.saveDonationToDb(newDonation);
+
+                window.lastDonationData = newDonation;
+
+                document.getElementById('modalReceiptId').innerText = `#${newDonation.id}`;
+                document.getElementById('modalReceiptDate').innerText = newDonation.date;
+                document.getElementById('modalDonorName').innerText = newDonation.name;
+                document.getElementById('modalDonorPhone').innerText = newDonation.phone;
+                document.getElementById('modalAmbassadorName').innerText = newDonation.childName;
+                document.getElementById('modalPaymentType').innerText = newDonation.payment;
+                document.getElementById('modalDonatedAmount').innerText = `$${newDonation.amount}`;
+
+                // Setup dynamic messaging links
+                const cleanPhone = newDonation.phone.replace(/[^0-9]/g, '');
+                const msgText = `שלום ${newDonation.name}, תודה רבה על התחייבותך בסך $${newDonation.amount} לקמפיין הבר מצווה של שניאור דרך השגריר ${newDonation.childName}! מס' אישור: #${newDonation.id}. תזכה למצוות!`;
+                
+                const formattedPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.substring(1) : cleanPhone;
+                const waUrl = formattedPhone.length >= 9 ? 
+                    `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(msgText)}` :
+                    `https://api.whatsapp.com/send?text=${encodeURIComponent(msgText)}`;
+                document.getElementById('btnSendWhatsapp').href = waUrl;
+
+                document.getElementById('btnSendSms').href = `sms:${cleanPhone}?body=${encodeURIComponent(msgText)}`;
+                
+                const mailSubject = encodeURIComponent(`אישור התחייבות קמפיין בר מצווה - מס' #${newDonation.id}`);
+                document.getElementById('btnSendEmail').href = `mailto:?subject=${mailSubject}&body=${encodeURIComponent(msgText)}`;
+
+                document.getElementById('thankYouModal').classList.remove('hidden');
+                document.getElementById('donationForm').reset();
+                window.showToast("התחייבותך נקלטה ונשמרה בהצלחה!");
+            }
+
+            function closeThankYouModal() {
+                document.getElementById('thankYouModal').classList.add('hidden');
+            }
+
+            function downloadReceiptPDF() {
+                const element = document.getElementById('receiptContainerToPrint');
+                if (!element) return;
+                
+                window.showToast("מפיק קובץ PDF, אנא המתן...");
+
+                try {
+                    const opt = {
+                        margin:       0.3,
+                        filename:     `pledge_shneor_${window.lastDonationData ? window.lastDonationData.id : 'receipt'}.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        window.showToast("קובץ ה-PDF ירד בהצלחה!");
+                    }).catch(err => {
+                        window.print();
+                    });
+                } catch(err) {
+                    window.print();
+                }
+            }
+
+            function copyReceiptText() {
+                if (!window.lastDonationData) return;
+                const txt = `אישור התחייבות - קמפיין הטסת שניאור לרבי\nמס' אישור: #${window.lastDonationData.id}\nתורם: ${window.lastDonationData.name}\nסכום: $${window.lastDonationData.amount}\nשגריר: ${window.lastDonationData.childName}\nתאריך: ${window.lastDonationData.date}\nתזכו למצוות!`;
+                
+                try {
+                    document.execCommand('copy');
+                    window.showToast("ההודעה הועתקה ללוח!");
+                } catch (e) {
+                    navigator.clipboard.writeText(txt).then(() => {
+                        window.showToast("ההודעה הועתקה ללוח!");
+                    }).catch(() => {
+                        window.showToast("שגיאה בהעתקה", 'error');
+                    });
+                }
+            }
+
+            function exportDonationsToCsv() {
+                if (!window.donationsList || window.donationsList.length === 0) {
+                    window.showToast("אין התחייבויות לייצוא כעת", 'error');
+                    return;
+                }
+
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+                csvContent += "תאריך,שם התורם,שגריר,סכום ($),סוג התחייבות,טלפון,סטטוס,הערה\n";
+
+                window.donationsList.forEach(d => {
+                    csvContent += `"${d.date}","${d.name}","${d.childName}","${d.amount}","${d.payment}","${d.phone}","${d.status || 'התחייבות'}","${d.note || ''}"\n`;
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `pledges_report_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.showToast("דוח התחייבויות יוצא בהצלחה");
+            }
+
+            function copyLink(url) {
+                try {
+                    navigator.clipboard.writeText(url).then(() => {
+                        window.showToast("הקישור הועתק בהצלחה!");
+                    });
+                } catch(e) {
+                    window.showToast("הקישור הועתק!");
+                }
+            }
+        </script>
+    </main>
+</body>
+</html>
